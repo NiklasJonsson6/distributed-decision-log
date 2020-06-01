@@ -5,14 +5,13 @@ OrdererOrgs:
   # ---------------------------------------------------------------------------
   # Orderer
   # ---------------------------------------------------------------------------
-  - Name: Groeifabriek
-    Domain: groeifabriek.nl
+  - Name: YoleanOrd
+    Domain: yoleanord.se
     EnableNodeOUs: true
     Specs:
       - Hostname: orderer0
-      - Hostname: orderer1
-  - Name: Pivt
-    Domain: pivt.nl
+  - Name: Yolean2Ord
+    Domain: yolean2ord.se
     EnableNodeOUs: true
     Specs:
       - Hostname: orderer0
@@ -21,24 +20,16 @@ OrdererOrgs:
 # "PeerOrgs" - Definition of organizations managing peer nodes
 # ---------------------------------------------------------------------------
 PeerOrgs:
-  - Name: Karga
-    Domain: aptalkarga.tr
+  - Name: Yolean
+    Domain: yolean.se
     EnableNodeOUs: true
     Template:
       Count: 2
     Users:
       Count: 1
   
-  - Name: Nevergreen
-    Domain: nevergreen.nl
-    EnableNodeOUs: true
-    Template:
-      Count: 2
-    Users:
-      Count: 1
-
-  - Name: Atlantis
-    Domain: atlantis.com
+  - Name: Yolean2
+    Domain: yolean2.se
     EnableNodeOUs: true
     Template:
       Count: 2
