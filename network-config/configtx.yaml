@@ -17,7 +17,7 @@ Organizations:
         ID: YoleanOrdMSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
-        MSPDir: crypto-config/ordererOrganizations/Yoleanord.se/msp
+        MSPDir: crypto-config/ordererOrganizations/yoleanord.se/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -39,7 +39,7 @@ Organizations:
         # ID to load the MSP definition as
         ID: Yolean2OrdMSP
 
-        MSPDir: crypto-config/ordererOrganizations/Yolean2ord.se/msp
+        MSPDir: crypto-config/ordererOrganizations/yolean2ord.se/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -348,8 +348,8 @@ Profiles:
         Orderer:
             <<: *OrdererDefaults
             Organizations:
-                - *Groeifabriek
-                - *Pivt
+                - *YoleanOrd
+                - *Yolean2Ord
                           
         Consortiums:
             TheConsortium:
