@@ -17,7 +17,7 @@ network:
   chaincodes:
     - name: very-simple
       # if defined, this will override the global chaincode.version value
-      version: # "2.0" 
+      #version: # "2.0" 
       # language: ...
       # chaincode will be installed to all peers in these organizations
       orgs: [Yolean, Yolean2]

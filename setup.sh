@@ -35,3 +35,6 @@ kubectl wait --for condition=ready pods --all
 
 echo "-- create the channel(s) --"
 helm template channel-flow/ -f $project_folder/network.yaml -f $project_folder/crypto-config.yaml -f $project_folder/hostAliases.yaml | argo submit - --watch
+
+echo "-- install chaincodes --"
+helm template chaincode-flow/ -f $project_folder/network.yaml -f $project_folder/crypto-config.yaml -f $project_folder/hostAliases.yaml | argo submit - --watch

@@ -1,0 +1,28 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+metadata:
+  name: backend
+build:
+  artifacts:
+  - image: backend
+    docker:
+#      Dockerfile: Dockerfile
+      target: dev
+      buildArgs:
+        build: package
+    sync: 
+      manual:
+      - src: 'src/main/java/**'
+        dest: /workspace
+      - src: 'src/test/java/**'
+        dest: /tmp/ignored
+deploy:
+  kubectl:
+    manifests:
+    - backend.yaml
+profiles:
+- name: prod
+  patches:
+  - op: replace
+    path: /build/artifacts/0/docker/target
+    value: jvm

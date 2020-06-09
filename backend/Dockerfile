@@ -1,78 +1,75 @@
-# Maven
-FROM maven:3.6.3-jdk-8-slim@sha256:d8e01825867d1e4ddbb96e40b5f08183e2a7d7ff40521c49cd8e76e36d75d340 \
-  as maven
+# By Staffan Olsson https://github.com/solsson
 
-# JDK
-FROM openjdk:8-jdk-slim@sha256:71592a5c3eecf243b624f0a718402bb54d9ccb282b3ae3aa108f62b5cd5539d1 \
+# An adoptopenjdk/ubuntu alternative to https://github.com/quarkusio/quarkus/blob/1.3.0.Final/docs/src/main/asciidoc/building-native-image.adoc
+# with an attempt to speed up repeated builds by caching maven deps
+# and support for jvm build in the same file, see ./hooks/build
+
+FROM solsson/kafka:2.4.1-graalvm@sha256:2d1f65c34357813539acd1345cab267f8552b264ce62e040e4860d8106daac0d \
   as dev
 
-# Multi-stage build
-COPY --from=maven /usr/share/maven /usr/share/maven
-
-# symlink mvn
-RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
-ENV MAVEN_HOME=/usr/share/maven
-ENV MAVEN_CONFIG=/root/.m2
-
-# Create a sample project
 WORKDIR /workspace
-RUN mvn io.quarkus:quarkus-maven-plugin:1.2.1.Final:create \
-  -DprojectGroupId=org.example.temp \
-  -DprojectArtifactId=kafka-quickstart \
-  -Dextensions="kafka" && \
-  cd kafka-quickstart && \
-  mkdir -p src/test/java/org && echo 'package org; public class T { @org.junit.jupiter.api.Test public void t() { } }' > src/test/java/org/T.java
+COPY pom.xml .
 
-# Add our pom file and build from that
-COPY pom.xml kafka-quickstart/
+# -- depdendency caching hacks
 RUN set -e; \
-  mvn -f kafka-quickstart/pom.xml package; \
-  rm -r kafka-quickstart
+  export QUARKUS_VERSION=$(cat pom.xml | grep '<quarkus.platform.version>' | sed 's/.*>\(.*\)<.*/\1/'); \
+  echo "Quarkus version: $QUARKUS_VERSION"; \
+  mv pom.xml pom.tmp; \
+  mvn io.quarkus:quarkus-maven-plugin:$QUARKUS_VERSION:create \
+    -DprojectGroupId=org.example.temp \
+    -DprojectArtifactId=kafka-quickstart \
+    -Dextensions="kafka"; \
+  mv pom.tmp kafka-quickstart/pom.xml; \
+  cd kafka-quickstart; \
+  mkdir -p src/test/java/org && echo 'package org; public class T { @org.junit.jupiter.api.Test public void t() { } }' > src/test/java/org/T.java; \
+  printf "\nquarkus.native.additional-build-args=--dry-run\n" >> src/main/resources/application.properties; \
+  mvn package -Pnative || echo "... Build error is expected. Caching dependencies."; \
+  cd ..; \
+  rm -r kafka-quickstart;
+# end dependency caching
+
 COPY . .
 
-# Run
-ENTRYPOINT [ "mvn", "compile", "quarkus:dev" ]
+ENTRYPOINT [ "mvn", "quarkus:dev" ]
 CMD [ "-Dquarkus.http.host=0.0.0.0", "-Dquarkus.http.port=8080" ]
 
-FROM openjdk:8-jdk-slim@sha256:71592a5c3eecf243b624f0a718402bb54d9ccb282b3ae3aa108f62b5cd5539d1 \
-  as maven-build
+# The jar and the lib folder is required for the jvm target even when the native target is the end result
+RUN mvn package -Dmaven.test.skip=true
 
-# Copy maven, set symlink and envs
-COPY --from=maven /usr/share/maven /usr/share/maven
-RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
-ENV MAVEN_HOME=/usr/share/maven
-ENV MAVEN_CONFIG=/root/.m2
-COPY --from=dev ${MAVEN_HOME} ${MAVEN_HOME}
-COPY --from=dev ${MAVEN_CONFIG} ${MAVEN_CONFIG}
+# For a regular JRE image run: docker build --build-arg build="package" --target=jvm
+ARG build="package -Pnative"
 
-# Copy files
-WORKDIR /workspace
-COPY . .
+RUN test "$build" = "package" && mvn --batch-mode test || mvn --batch-mode $build
 
-# Build the actual project
-RUN set -e; \
-  mvn -o -DskipTests package;
+FROM solsson/kafka:jre-latest@sha256:4f880765690d7240f4b792ae16d858512cea89ee3d2a472b89cb22c9b5d5bd66 \
+  as jvm
 
-# Runtime environment
-FROM fabric8/java-alpine-openjdk8-jre@sha256:a5d31f17d618032812ae85d12426b112279f02951fa92a7ff8a9d69a6d3411b1 \
-  as runtime-jre
-
-ARG SOURCE_COMMIT
-ARG SOURCE_BRANCH
-ARG IMAGE_NAME
-
-# Copy build
 WORKDIR /app
-COPY --from=maven-build /workspace/target/lib ./lib
-COPY --from=maven-build /workspace/target/*-runner.jar ./quarkus-kafka.jar
+COPY --from=dev /workspace/target/lib ./lib
+COPY --from=dev /workspace/target/*-runner.jar ./app.jar
 
-# Run (-cp )
-EXPOSE 8080
+EXPOSE 8090
 ENTRYPOINT [ "java", \
   "-Dquarkus.http.host=0.0.0.0", \
   "-Dquarkus.http.port=8080", \
   "-Djava.util.logging.manager=org.jboss.logmanager.LogManager", \
   "-cp", "./lib/*", \
-  "-jar", "./quarkus-kafka.jar" ]
+  "-jar", "./app.jar" ]
 
-ENV SOURCE_COMMIT=${SOURCE_COMMIT} SOURCE_BRANCH=${SOURCE_BRANCH} IMAGE_NAME=${IMAGE_NAME}
+FROM gcr.io/distroless/base-debian10:nonroot@sha256:56da492c4800196c29f3e9fac3c0e66af146bfd31694f29f0958d6d568139dd9
+
+COPY --from=dev \
+  /lib/x86_64-linux-gnu/libz.so.* \
+  /lib/x86_64-linux-gnu/
+
+COPY --from=dev \
+  /usr/lib/x86_64-linux-gnu/libzstd.so.* \
+  /usr/lib/x86_64-linux-gnu/libsnappy.so.* \
+  /usr/lib/x86_64-linux-gnu/liblz4.so.* \
+  /usr/lib/x86_64-linux-gnu/
+
+COPY --from=dev /workspace/target/*-runner /usr/local/bin/app
+
+EXPOSE 8080
+ENTRYPOINT ["app", "-Djava.util.logging.manager=org.jboss.logmanager.LogManager"]
+CMD ["-Dquarkus.http.host=0.0.0.0", "-Dquarkus.http.port=8080"]
