@@ -15,7 +15,7 @@ network:
 
   # defines which chaincodes will be installed to which organizations
   chaincodes:
-    - name: very-simple
+    - name: decision-log
       # if defined, this will override the global chaincode.version value
       #version: # "2.0" 
       # language: ...
