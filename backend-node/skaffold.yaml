@@ -1,0 +1,13 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+build:
+  artifacts:
+  - image: backend-node
+    sync:
+      manual:
+      - src: 'src/**/*.js'
+        dest: .
+deploy:
+  kubectl:
+    manifests:
+    - backend.yaml

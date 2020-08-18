@@ -1,0 +1,27 @@
+{
+  "name": "backend-node",
+  "version": "1.0.0",
+  "description": "the backend component for the distributed decision log",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "lint": "eslint ."
+  },
+  "author": "NiklasJonsson6",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "log4js": "^2.5.3",
+    "fabric-network": "^2.1.0",
+    "fabric-ca-client": "^2.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4",
+    "eslint": "^7.7.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.21.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
+  }
+}

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-node
+  labels: &labels
+    app: backend-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+      - name: node
+        image: backend-node
+        ports:
+        - containerPort: 8080
+      hostAliases:
+        - ip: 10.111.206.203
+          hostnames: [orderer0.yolean2ord.se]
+        - ip: 10.103.11.31
+          hostnames: [orderer0.yoleanord.se]
+        - ip: 10.109.11.133
+          hostnames: [peer0.yolean.se]
+        - ip: 10.97.122.39
+          hostnames: [peer1.yolean.se]
+        - ip: 10.98.143.230
+          hostnames: [peer0.yolean2.se]
+        - ip: 10.102.103.247
+          hostnames: [peer1.yolean2.se]

@@ -16,12 +16,6 @@ const Chaincode = class extends ChaincodeBase {
     logger.info('called test with text');
     return 'answer';
   }
-  
-  /*async ping() {
-    logger.info("ping called", "");
-    const answer = { ping: 'pong' };
-    return Buffer.from(JSON.stringify(answer), 'utf8');
-  }*/
 };
 
 module.exports = Chaincode;
