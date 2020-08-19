@@ -1,25 +1,30 @@
 'use strict';
 
-const { Contract, Context } = require('fabric-contract-api');
+//const { Contract, Context } = require('fabric-contract-api');
+const { Contract } = require('fabric-contract-api');
 
-const Decision = require('./decision.js');
-const DecisionList = require('./decisionlist.js');
+//const Decision = require('./decision.js');
+//const DecisionList = require('./decisionlist.js');
 
-class DecisionContext extends Context {
+/*class DecisionContext extends Context {
   constructor() {
     super();
     this.decisionList = new DecisionList(this);
   }
-}
+}*/
 
 class DecisionContract extends Contract {
   constructor() {
     super('se.yolean.decision');
   }
 
-  createContext() {
+  /*createContext() {
     return new DecisionContext();
-  }
+  }*/
+
+  /*async instantiate(ctx) {
+    console.log('Instantiate the contract');
+  }*/
 
   /**
    * Start a new decision
@@ -29,14 +34,15 @@ class DecisionContract extends Contract {
    * @param {String} starter_name the name of the starter client
    */
   async start(ctx, id, starter_id, starter_name) {
-    let participants = [{starter_id: starter_id, starter_name: starter_name}];
+    /*let participants = [{starter_id: starter_id, starter_name: starter_name}];
     let decision = Decision.createInstance(id, starter_id, participants);
     decision.setOngoing();
     await ctx.decisionList.addDecision(decision);
-    return decision;
+    return decision;*/
+    return 'bra';
   }
 
-  async end(ctx, id, starter_id) {
+  /*async end(ctx, id, starter_id) {
     let decisionKey = Decision.makeKey([id, starter_id]);
     let decision = await ctx.decisionList.getDecision(decisionKey);
 
@@ -45,6 +51,7 @@ class DecisionContract extends Contract {
     } else {
       throw new Error('Decision' +  id + 'is already ended');
     }
+    return decision;
   }
 
   async join(ctx, key, participant_id, participant_name) {
@@ -64,7 +71,7 @@ class DecisionContract extends Contract {
   async queryDecision(ctx, key) {
     let decision = await ctx.decisionList.getDecision(key);
     return decision;
-  }
+  }*/
 }
 
-module.export = DecisionContract;
+module.exports = DecisionContract;

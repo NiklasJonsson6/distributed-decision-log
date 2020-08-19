@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -13,6 +14,7 @@ import java.util.Properties;
 import org.hyperledger.fabric.gateway.Contract;
 import org.hyperledger.fabric.gateway.ContractException;
 import org.hyperledger.fabric.gateway.Gateway;
+import org.hyperledger.fabric.gateway.GatewayRuntimeException;
 import org.hyperledger.fabric.gateway.Network;
 import org.hyperledger.fabric.gateway.Wallet;
 import org.hyperledger.fabric.gateway.Wallet.Identity;
@@ -32,7 +34,7 @@ public class ClientGateway {
 
   private final Logger logger = LoggerFactory.getLogger(ClientGateway.class);
 
-  public void connect() throws Exception {
+  public String connect() throws Exception {
     Path walletPath = Paths.get("wallet");
     Wallet wallet = Wallet.createFileSystemWallet(walletPath);
     logger.info("File system wallet created at path {}", walletPath.toString());
@@ -42,15 +44,18 @@ public class ClientGateway {
     Path networkConfigPath = Paths.get("..", "src", "main", "resources", "connection-yolean.yaml");
 
     Gateway.Builder builder = Gateway.createBuilder();
-    builder
-      .identity(wallet, "admin")
-      .networkConfig(networkConfigPath)
-      .discovery(true);
+    builder.identity(wallet, "admin").networkConfig(networkConfigPath);
 
     try (Gateway gateway = builder.connect()) {
       Network network = gateway.getNetwork("meeting1");
-      Contract contract = network.getContract("very-simple");
+      Contract contract = network.getContract("decision-log-shim");
       logger.info("get channel: {} and chaincode: {}", network.toString(), contract.toString());
+
+      //logger.info(contract.createTransaction("ping").getName());
+      byte[] pingResult = contract.createTransaction("test").submit();
+      logger.info(new String(pingResult, StandardCharsets.UTF_8));
+      
+      return new String(pingResult, StandardCharsets.UTF_8);
     }
   }
 

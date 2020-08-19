@@ -7,7 +7,6 @@ const decisionState = {
   ENDED: 2
 };
 
-
 class Decision extends State {
   constructor(obj) {
     super(Decision.getClass(), [obj.id, obj.starter_id]);

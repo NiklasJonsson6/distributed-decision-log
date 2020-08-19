@@ -23,4 +23,4 @@ class DecisionList extends StateList {
   }
 }
 
-module.export = DecisionList;
+module.exports = DecisionList;

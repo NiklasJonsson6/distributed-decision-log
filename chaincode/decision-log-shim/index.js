@@ -1,4 +1,6 @@
-const shim = require('fabric-shim');
-const Chaincode = require('./very-simple');
+'use strict';
 
-shim.start(new Chaincode());
+const shim = require('fabric-shim');
+const Decision = require('./decision');
+
+shim.start(new Decision());

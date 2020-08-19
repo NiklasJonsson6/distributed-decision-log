@@ -1,4 +1,4 @@
 'use strict';
 
-const DecisionLog = require('./lib/decisioncontract');
-module.exports.contracts = [DecisionLog];
+const DecisionContract = require('./lib/decisioncontract.js');
+module.exports.contracts = [DecisionContract];
