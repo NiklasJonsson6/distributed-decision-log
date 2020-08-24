@@ -1,0 +1,31 @@
+/* decision_id */
+{
+  state: pending | ongoing | ended,
+  attendance: [
+    {
+      client_id: uid,
+      reservation: boolean,
+      hereAtStart: boolean,
+      hereAtEnd: boolean
+    },
+    ...
+  ]
+}
+
+/* contract */
+start(client_id) return decision_id
+join(decision_id, client_id) 
+setOngoing(decision_id) return ok
+hereAtStart(client_id)
+setEnded(decision_id) 
+hereAtEnd(client_id)
+
+/* backend-client */
+<- start()
+join() ->
+<- join()
+act() ->
+<- here()
+<- reserve()
+stillHere() ->
+<- here()
