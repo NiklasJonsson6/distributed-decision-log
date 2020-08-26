@@ -13,7 +13,8 @@
     "express": "^4.17.1",
     "fabric-ca-client": "^2.1.0",
     "fabric-network": "^2.1.0",
-    "log4js": "^2.5.3"
+    "log4js": "^2.5.3",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.4",
