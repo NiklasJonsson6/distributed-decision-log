@@ -18,16 +18,40 @@ spec:
         ports:
         - containerPort: 8080
       hostAliases:
-      - ip: 10.99.201.206
-        hostnames: [orderer0.yolean2ord.se]
-      - ip: 10.104.39.159
-        hostnames: [orderer0.yoleanord.se]
-      - ip: 10.99.106.90
-        hostnames: [peer0.yolean.se]
-      - ip: 10.111.57.94
-        hostnames: [peer1.yolean.se]
-      - ip: 10.96.236.250
-        hostnames: [peer0.yolean2.se]
-      - ip: 10.111.30.247
-        hostnames: [peer1.yolean2.se]
-          
+        - ip: 10.97.138.97
+          hostnames: [orderer0.yolean2ord.se]
+        - ip: 10.108.144.173
+          hostnames: [orderer0.yoleanord.se]
+        - ip: 10.107.118.96
+          hostnames: [peer0.yolean.se]
+        - ip: 10.111.25.118
+          hostnames: [peer1.yolean.se]
+        - ip: 10.107.194.62
+          hostnames: [peer0.yolean2.se]
+        - ip: 10.96.84.101
+          hostnames: [peer1.yolean2.se]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend-node
+  ports:
+    - port: 80
+      targetPort: 8080
+  clusterIP: 10.103.75.172
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: backend-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: backend-service
+          servicePort: 8080

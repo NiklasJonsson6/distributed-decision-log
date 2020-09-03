@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-node
+  labels: &labels
+    app: client-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+      - name: node
+        image: client-node
+        ports:
+        - containerPort: 80
+      hostAliases:
+        - ip: 10.103.75.172
+          hostnames: [backend]

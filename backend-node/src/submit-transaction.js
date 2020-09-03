@@ -26,9 +26,9 @@ const submitTransaction = async (walletPath, name, ...args) => {
     const contract = network.getContract('decision-log-shim');
 
     console.log(`submitting transaction: ${name} with args: ${args}`);
-    const response = await contract.submitTransaction(name, args);
+    const response = await contract.submitTransaction(name, ...args);
     console.log(`response: ${response}`);
-    return response;
+    return response.toString('utf-8');
   } catch (error) {
     console.log(`Error on transaction: ${error}`);
     console.log(error.stack);

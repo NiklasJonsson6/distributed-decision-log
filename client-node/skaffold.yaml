@@ -1,0 +1,15 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+build:
+  tagPolicy:
+    sha256: {}
+  artifacts:
+  - image: client-node
+    sync:
+      manual:
+      - src: 'src/**/*.js'
+        dest: .
+deploy:
+  kubectl:
+    manifests:
+    - client.yaml
