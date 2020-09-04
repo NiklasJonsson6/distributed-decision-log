@@ -17,7 +17,7 @@ describe('Test Chaincode', () => {
   it('Should work...', async () => {
     // Simply test if the transactions go through, the actual response should not matter in most cases
     const stub = new ChaincodeMockStub('MockStub', decision);
-    const response = await stub.mockInvoke('tx1', ['startDecision', 'client_id0', 'decision_id0']);
+    const response = await stub.mockInvoke('tx1', ['startDecision', 'decision_id0']);
     expect(Transform.bufferToObject(response.payload)).to.deep.eql('decision_id0');
 
     // query

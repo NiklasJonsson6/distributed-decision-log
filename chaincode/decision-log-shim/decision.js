@@ -24,6 +24,9 @@ const Decision = class extends ChaincodeBase {
    */
   async queryDecision(stub, txHelper, decision_id) {
     const decision = await txHelper.getStateAsObject(decision_id);
+    // Get all clients prefixed with 'decision_id~'
+    // Add them to decision and return
+    //stub.getStateByPartialCompositeKey()
     myLogger.info(`Queried decision with id: ${decision_id}, ${JSON.stringify(decision)}`);
     return decision;
   }
@@ -33,19 +36,12 @@ const Decision = class extends ChaincodeBase {
    * @param {string} client_id the initiating client
    * @returns {string} decision_id
    */
-  async startDecision(stub, txHelper, client_id, decision_id = txHelper.uuid('decision')) {
+  async startDecision(stub, txHelper, decision_id = txHelper.uuid('decision')) {
     //const decision_id = t;
     const decision = {
       decision_id: decision_id,
       state: states.PENDING,
-      attendance: [
-        {
-          client_id: client_id,
-          reservation: false,
-          hereAtStart: false,
-          hereAtEnd: false
-        }
-      ]
+      attendance: [] // Separate rows for clients
     };
     await txHelper.putState(decision_id, decision);
     myLogger.info(`Decision with id ${decision_id} added to ledger`);
@@ -58,21 +54,27 @@ const Decision = class extends ChaincodeBase {
    * @param {string} client_id
    */
   async join(stub, txHelper, client_id, decision_id) {
+    // Querying decision puts it into the read_set,
+    // which is intended to prevent joins after state change while still allowing concurrent joins
     const decision = await txHelper.getStateAsObject(decision_id);
     if (decision.state !== states.PENDING) {
       throw new Error(`Decision state is ${decision.state}, should be ${states.PENDING}`);
     }
-    if (decision.attendance.filter(client => client.client_id === client_id).length > 0) {
-      throw new Error(`Client with id: ${client_id} is already joined to the decision`);
+
+    // client should not yet exist
+    if (typeof await txHelper.getStateAsObject(client_id) === 'undefined') {
+      const client = {
+        client_id: client_id,
+        reservation: false,
+        hereAtStart: false,
+        hereAtEnd: false
+      };
+      const compositeKey = stub.createCompositeKey('decision~client', [decision_id, client_id]);
+      await txHelper.putState(compositeKey, client);
+      myLogger.info(`Client added with key: ${compositeKey}`);
+    } else {
+      throw new Error(`Client with id ${client_id} has already joined the decision with id ${decision_id}`);
     }
-    decision.attendance.push({
-      client_id: client_id,
-      reservation: false,
-      hereAtStart: false,
-      hereAtEnd: false
-    });
-    await txHelper.putState(decision_id, decision);
-    myLogger.info(`Client with id: ${client_id} joined decision with id: ${decision_id}`);
   }
 
   /**
@@ -98,19 +100,19 @@ const Decision = class extends ChaincodeBase {
    */
   async here(stub, txHelper, client_id, decision_id) {
     const decision = await txHelper.getStateAsObject(decision_id);
-    const index = decision.attendance.findIndex(client => client.client_id === client_id);
-    if (index === -1) {
-      throw new Error(`Client with id: ${client_id} is not in attendance`);
-    }
+    const iterator = await stub.getStateByPartialCompositeKey('decision~client', [decision_id, client_id]);
+    const client = JSON.parse((await iterator.next()).value.value.toString());
+    myLogger.debug(client);
     if (decision.state === states.ONGOING) {
-      decision.attendance[index].hereAtStart = true;
+      client.hereAtStart = true;
     } else if (decision.state === states.ENDED) {
-      decision.attendance[index].hereAtEnd = true;
+      client.hereAtEnd = true;
     } else {
       throw new Error(`Decision with id: ${decision_id} is in state ${decision.state}, should be ${states.ONGOING} or ${states.ENDED}`);
     }
-    await txHelper.putState(decision_id, decision);
-    myLogger.info(`Client with id: ${client_id} announced its participation`);
+    myLogger.debug(client);
+    await txHelper.putState(stub.createCompositeKey('decision~client', [decision_id, client_id]), client);
+    myLogger.info(`Client with id: ${client_id} announced its participation in decision ${decision_id}`);
   }
 
   /**
