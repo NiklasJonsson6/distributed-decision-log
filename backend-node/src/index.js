@@ -11,12 +11,105 @@ const port = 8080;
 const enrollAdmin = require('./enroll-admin');
 const submitTransaction = require('./submit-transaction');
 
+const decisionProcess = async (walletPath) => {
+  let promises = [];
+  // Pending phase
+  console.log('Start of pending phase, joining all clients to the decision: ' + JSON.stringify(app.locals.clients));
+  app.locals.clients.forEach((c) => {
+    promises.push(fetch(`http://${c.ip}`)
+      .then((res) => {
+        if (res.ok) {
+          // invoke join
+          console.log(`Client ${c.ip} joins the decision`);
+          return submitTransaction(walletPath, 'join', c.uuid, app.locals.decisionId);
+        } else {
+          // remove client from array
+          console.log(`Client ${c.ip} did not respond (pending) and is removed from the client list`);
+          app.locals.clients = app.locals.client.filter(cl => cl.uuid !== c.uuid);
+        }
+      }));
+  });
+  // wait for all clients to respond or time out
+  await Promise.allSettled(promises);
+  console.log('All promises from pending phase settled, start of ongoing phase');
+  // Ongoing phase
+  if (await submitTransaction(walletPath, 'setOngoing', app.locals.decisionId) === '"success"') {
+    console.log('Decision state succesfully set to ongoing, fetching clients');
+    promises = [];
+    app.locals.clients.forEach(async (c) => {
+      promises.push(fetch(`http://${c.ip}`)
+        .then((res) => {
+          if (res.ok) {
+            // invoke here
+            console.log(`Client ${c.ip} asserts its attendance`);
+            return submitTransaction(walletPath, 'here', c.uuid, app.locals.decisionId);
+          } else {
+            // remove client from array
+            console.log(`Client ${c.ip} did not respond (ongoing) and is removed from the client list`);
+            app.locals.clients = app.locals.client.filter(cl => cl.uuid !== c.uuid);
+          }
+        }));
+    });
+    // Wait for timer
+    // ...
+    // Wait for responses
+    await Promise.allSettled(promises);
+    console.log('All promises from ongoing phase settled, start of ended phase');
+  } else {
+    // Some nice error... or maybe it's thrown from submitTransaction already
+    throw new Error();
+  }
+  // Ended phase
+  if (await submitTransaction(walletPath, 'setEnded', app.locals.decisionId) === '"success"') {
+    console.log('Decision state succesfully set to ended, fetching clients');
+    promises = [];
+    app.locals.clients.forEach(c => {
+      promises.push(fetch(`http://${c.ip}`)
+        .then((res) => {
+          if (res.ok) {
+            // invoke here
+            console.log(`Client ${c.ip} asserts its attendance`);
+            return submitTransaction(walletPath, 'here', c.uuid, app.locals.decisionId);
+          } else {
+            // remove client from array
+            console.log(`Client ${c.ip} did not respond (ongoing) and is removed from the client list`);
+            app.locals.clients = app.locals.client.filter(cl => cl.uuid !== c.uuid);
+          }
+        }));
+    });
+    // Wait for timer
+    // ...
+    // Wait for responses
+    await Promise.allSettled(promises);
+    console.log('All promises from ended phase settled');
+  } else {
+    // Some nice error... or maybe it's thrown from submitTransaction already
+    throw new Error();
+  }
+};
+
 // Client API
 app.get('/startDecision', async (req, res) => {
+  // Response time
+  const startTime = process.hrtime();
+  // const startTime = process.hrtime();
+  //   let endTime = process.hrtime();
+  //   fetch(`http://${backendAddr}/startDecision`)
+  //     .then(res => {
+  //       endTime = process.hrtime(startTime);
+  //       logger.debug('Overhead time (hr): %ds %dms', endTime[0], endTime[1] / 1000000);
+  //     }).then(() => {
+  //       res.send(`Overhead time (hr): ${endTime[0]} ${endTime[1] / 1000000}`);
+  //     });
   const transactionResponse = await submitTransaction(await enrollAdmin.enroll(), 'startDecision', uuidv4());
+  const endTime = process.hrtime(startTime);
   app.locals.decisionId = transactionResponse;
   console.log(`Decision started with id: ${app.locals.decisionId}`);
-  res.sendStatus(200);
+
+  // Overhead
+  await decisionProcess(await enrollAdmin.enroll());
+
+  res.send(`: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
 });
 
 app.post('/here', async (req, res) => {
@@ -27,7 +120,7 @@ app.post('/here', async (req, res) => {
     app.locals.clients = [];
   }
   // Add the client to the list if not already added, otherwise just respond 'ok'
-  if (app.locals.clients.length === 0 || app.locals.clients.some(c => !(c.ip === clientIP))) {
+  if (app.locals.clients.length === 0 || app.locals.clients.every(c => !(c.ip === clientIP))) {
     app.locals.clients.push({ip: clientIP, uuid: uuidv4()});
   }
   console.log(JSON.stringify(app.locals.clients));
@@ -53,120 +146,6 @@ app.get('/reserve', async (req, res) => {
     }
   }
 });
-
-/*
-When a decision is started:
-  fetch all clients in app.locals and wait for response
-    timeout -> remove client
-    response -> invoke join(client_id, decision_id)
-  invoke setOngoing(decision_id), wait for response
-    response -> fetch all clients and (dont?) start timer (setTimeout)
-      response -> here(client_id, decision_id)
-  wait for timer
-  invoke setEnded(decision_id), wait for response
-    response -> fetch all clients
-      response -> here(client_id, decision_id)
-*/
-/*
-app.locals.clients.forEach(c => {
-    promises.push(fetch(`http://${c.ip}`)
-      .then((res) => {
-        if (res.ok) {
-          // invoke join
-          console.log(`Client ${c.ip} joins the decision`);
-          promises.push(submitTransaction(walletPath, 'join', c.uuid, app.locals.decisionId));
-        } else {
-          // remove client from array
-          console.log(`Client ${c.ip} did not respond (pending) and is removed from the client list`);
-          app.locals.clients = app.locals.client.filter(cl => cl.uuid !== c.uuid);
-        }
-      }));
-  });
-
-  promise from fetch resolves at response
-    .then res is handled
-
-  idea:
-  wait for all fetch promises
-*/
-
-const decisionProcess = async (walletPath) => {
-  let promises = [];
-  // Pending phase
-  console.log('Start of pending phase, joining all clients to the decision: ' + JSON.stringify(app.locals.clients));
-  app.locals.clients.forEach((c) => {
-    promises.push(fetch(`http://${c.ip}`)
-      .then((res) => {
-        if (res.ok) {
-          // invoke join
-          console.log(`Client ${c.ip} joins the decision`);
-          return submitTransaction(walletPath, 'join', c.uuid, app.locals.decisionId);
-        } else {
-          // remove client from array
-          console.log(`Client ${c.ip} did not respond (pending) and is removed from the client list`);
-          app.locals.clients = app.locals.client.filter(cl => cl.uuid !== c.uuid);
-        }
-      }));
-  });
-  // wait for all clients to respond or time out
-  await Promise.allSettled(promises);
-  console.log('All promises from pending phase settled, start of ongoing phase');
-  // Ongoing phase
-  /*if (await submitTransaction(walletPath, 'setOngoing', app.locals.decisionId) === '"success"') {
-    console.log('Decision state succesfully set to ongoing, fetching clients');
-    promises = [];
-    app.locals.clients.forEach(async (c) => {
-      console.log(c.ip);
-      await fetch(`http://${c.ip}`)
-        .then((res) => {
-          if (res.ok) {
-            // invoke here
-            console.log(`Client ${c.ip} asserts its attendance`);
-            promises.push(submitTransaction(walletPath, 'here', c.uuid, app.locals.decisionId));
-          } else {
-            // remove client from array
-            console.log(`Client ${c.ip} did not respond (ongoing) and is removed from the client list`);
-            app.locals.clients = app.locals.client.filter(cl => cl.uuid !== c.uuid);
-          }
-        });
-    });
-    // Wait for timer
-    // ...
-    // Wait for responses
-    await Promise.allSettled(promises);
-    console.log('All promises from ongoing phase settled, start of ended phase');
-  } else {
-    // Some nice error... or maybe it's thrown from submitTransaction already
-    throw new Error();
-  }
-  // Ended phase
-  if (await submitTransaction(walletPath, 'setEnded', app.locals.decisionId) === '"success"') {
-    console.log('Decision state succesfully set to ended, fetching clients');
-    promises = [];
-    app.locals.clients.forEach(c => {
-      promises.push(fetch(`http://${c.ip}`)
-        .then((res) => {
-          if (res.ok) {
-            // invoke here
-            console.log(`Client ${c.ip} asserts its attendance`);
-            promises.push(submitTransaction(walletPath, 'here', c.uuid, app.locals.decisionId));
-          } else {
-            // remove client from array
-            console.log(`Client ${c.ip} did not respond (ongoing) and is removed from the client list`);
-            app.locals.clients = app.locals.client.filter(cl => cl.uuid !== c.uuid);
-          }
-        }));
-    });
-    // Wait for timer
-    // ...
-    // Wait for responses
-    await Promise.allSettled(promises);
-    console.log('All promises from ended phase settled');
-  } else {
-    // Some nice error... or maybe it's thrown from submitTransaction already
-    throw new Error();
-  }*/
-};
 
 // Control/test functions
 app.get('/process', async (req, res) => {

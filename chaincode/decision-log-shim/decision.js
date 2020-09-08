@@ -62,16 +62,16 @@ const Decision = class extends ChaincodeBase {
     }
 
     // client should not yet exist
-    if (typeof await txHelper.getStateAsObject(client_id) === 'undefined') {
+    const compositeKey = stub.createCompositeKey('decision~client', [decision_id, client_id]);
+    if (typeof await txHelper.getStateAsObject(compositeKey) === 'undefined') {
       const client = {
         client_id: client_id,
         reservation: false,
         hereAtStart: false,
         hereAtEnd: false
       };
-      const compositeKey = stub.createCompositeKey('decision~client', [decision_id, client_id]);
       await txHelper.putState(compositeKey, client);
-      myLogger.info(`Client added with key: ${compositeKey}`);
+      myLogger.info(`Client added with composite key: ${compositeKey}`);
     } else {
       throw new Error(`Client with id ${client_id} has already joined the decision with id ${decision_id}`);
     }
@@ -99,10 +99,10 @@ const Decision = class extends ChaincodeBase {
    * @param {string} decision_id
    */
   async here(stub, txHelper, client_id, decision_id) {
+    const compositeKey = stub.createCompositeKey('decision~client', [decision_id, client_id]);
     const decision = await txHelper.getStateAsObject(decision_id);
-    const iterator = await stub.getStateByPartialCompositeKey('decision~client', [decision_id, client_id]);
-    const client = JSON.parse((await iterator.next()).value.value.toString());
-    myLogger.debug(client);
+    const client = await txHelper.getStateAsObject(compositeKey);
+
     if (decision.state === states.ONGOING) {
       client.hereAtStart = true;
     } else if (decision.state === states.ENDED) {
@@ -110,8 +110,7 @@ const Decision = class extends ChaincodeBase {
     } else {
       throw new Error(`Decision with id: ${decision_id} is in state ${decision.state}, should be ${states.ONGOING} or ${states.ENDED}`);
     }
-    myLogger.debug(client);
-    await txHelper.putState(stub.createCompositeKey('decision~client', [decision_id, client_id]), client);
+    await txHelper.putState(client_id, client);
     myLogger.info(`Client with id: ${client_id} announced its participation in decision ${decision_id}`);
   }
 
