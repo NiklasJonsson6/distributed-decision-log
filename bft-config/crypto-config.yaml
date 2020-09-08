@@ -10,6 +10,14 @@ OrdererOrgs:
   #   EnableNodeOUs: true
   #   Specs:
   #     - Hostname: orderer0
+
+# ---------------------------------------------------------------------------
+# Frontends
+# ---------------------------------------------------------------------------
+  - Name: Frontends
+    Domain: yoleanfront.se
+    Specs:
+      - Hostname: 1000
       
 # ---------------------------------------------------------------------------
 # Ordering nodes
@@ -19,14 +27,6 @@ OrdererOrgs:
     Template:
       Count: 4
       Hostname: "{{.Index}}"
-
-  # ---------------------------------------------------------------------------
-  # Frontends
-  # ---------------------------------------------------------------------------
-  - Name: Frontends
-    Domain: yoleanfront.se
-    Specs:
-      - Hostname: 1000
 
 # ---------------------------------------------------------------------------
 # "PeerOrgs" - Definition of organizations managing peer nodes
