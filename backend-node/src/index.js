@@ -14,13 +14,13 @@ const submitTransaction = require('./submit-transaction');
 const decisionProcess = async (walletPath) => {
   let promises = [];
   // Pending phase
-  console.log('Start of pending phase, joining all clients to the decision: ' + JSON.stringify(app.locals.clients));
+  console.log('Start of pending phase, joining all clients to the decision: ' + JSON.stringify(app.locals.clients.map(c => c.ip)));
   app.locals.clients.forEach((c) => {
     promises.push(fetch(`http://${c.ip}`)
       .then((res) => {
         if (res.ok) {
           // invoke join
-          console.log(`Client ${c.ip} joins the decision`);
+          //console.log(`Client ${c.ip} joins the decision`);
           return submitTransaction(walletPath, 'join', c.uuid, app.locals.decisionId);
         } else {
           // remove client from array
@@ -41,7 +41,7 @@ const decisionProcess = async (walletPath) => {
         .then((res) => {
           if (res.ok) {
             // invoke here
-            console.log(`Client ${c.ip} asserts its attendance`);
+            //console.log(`Client ${c.ip} asserts its attendance`);
             return submitTransaction(walletPath, 'here', c.uuid, app.locals.decisionId);
           } else {
             // remove client from array
@@ -68,7 +68,7 @@ const decisionProcess = async (walletPath) => {
         .then((res) => {
           if (res.ok) {
             // invoke here
-            console.log(`Client ${c.ip} asserts its attendance`);
+            //console.log(`Client ${c.ip} asserts its attendance`);
             return submitTransaction(walletPath, 'here', c.uuid, app.locals.decisionId);
           } else {
             // remove client from array
@@ -115,7 +115,7 @@ app.get('/startDecision', async (req, res) => {
 app.post('/here', async (req, res) => {
   // Create 'clients' array
   const clientIP = req.ip.substring(7) + ':' + req.body;
-  console.log(`Client ${clientIP} connected`);
+  //console.log(`Client ${clientIP} connected`);
   if (!('clients' in app.locals)) {
     app.locals.clients = [];
   }
@@ -123,7 +123,7 @@ app.post('/here', async (req, res) => {
   if (app.locals.clients.length === 0 || app.locals.clients.every(c => !(c.ip === clientIP))) {
     app.locals.clients.push({ip: clientIP, uuid: uuidv4()});
   }
-  console.log(JSON.stringify(app.locals.clients));
+  //console.log(JSON.stringify(app.locals.clients));
   res.sendStatus(200);
 });
 
@@ -157,16 +157,15 @@ app.get('/', (req, res) => {
   // fetch('http://172.19.0.1:8080')
   //   .then(res => res.text())
   //   .then(body => console.log(body));
-  res.send(JSON.stringify(app.locals.decisionId));
+  app.locals.clients = [];
+  res.sendStatus(200);
 });
 
-app.get('/test', (req, res) => {
+app.get('/test', async (req, res) => {
   //console.log(req.headers['x-forwarded-for'] || req.socket.remoteAddress);
   console.log(`${req.socket.remoteAddress}:${req.socket.remotePort}/, ${req.ip}`);
+  await submitTransaction(await enrollAdmin.enroll(), 'ping');
   res.sendStatus(200);
-  fetch(`http://${req.ip.substring(7)}:8080`)
-    .then(res => res.text())
-    .then(body => console.log(body));
 });
 
 app.listen(port, () => console.log(`App listening on port ${port}`));

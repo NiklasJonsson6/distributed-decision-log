@@ -17,12 +17,15 @@ spec:
         image: backend-node
         ports:
         - containerPort: 8080
+        env: 
+        - name: GRPC_WAIT_FOR_READY_TIMEOUT
+          value: "1000"
       hostAliases:
-        - ip: 10.100.108.205
-          hostnames: [orderer0.yoleanord.se]
-        - ip: 10.104.246.2
+        - ip: 10.102.29.80
+          hostnames: [1000.yoleanfront.se]
+        - ip: 10.109.191.219
           hostnames: [peer0.yolean.se]
-        - ip: 10.108.248.52
+        - ip: 10.100.22.89
           hostnames: [peer0.yolean2.se]
 ---
 apiVersion: v1

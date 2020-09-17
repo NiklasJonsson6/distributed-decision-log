@@ -9,7 +9,7 @@ const path = require('path');
 
 const enroll = async () => {
   try {
-    const connectionProfile = yaml.safeLoad(fs.readFileSync('src/resources/connection-yolean.yaml', 'utf8'));
+    const connectionProfile = yaml.safeLoad(fs.readFileSync('src/resources/connection-bft.yaml', 'utf8'));
 
     // CA
     const caInfo = connectionProfile.certificateAuthorities['hlf-ca--yolean'];
@@ -20,7 +20,7 @@ const enroll = async () => {
     const wallet = await Wallets.newFileSystemWallet(walletPath);
 
     if (await wallet.get('admin')) {
-      console.log('User admin already exists in the wallet');
+      // console.log('User admin already exists in the wallet');
       return walletPath;
     }
 
@@ -35,7 +35,7 @@ const enroll = async () => {
     };
     await wallet.put('admin', x509Identity);
 
-    console.log('Sucessfully enrolled admin');
+    //console.log('Sucessfully enrolled admin');
     return walletPath;
   } catch (error) {
     console.error(`Failed to enroll admin: ${error}`);

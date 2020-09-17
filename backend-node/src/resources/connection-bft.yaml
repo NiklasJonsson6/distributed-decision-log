@@ -1,0 +1,65 @@
+name: "distributed-decision-log.yolean.se"
+
+description: "decision log network"
+
+version: "1.0"
+
+client:
+  organization: Yolean
+  connection:
+    timeout:
+      peer:
+        endorser: '300'
+
+organizations:
+  Yolean:
+    mspid: YoleanMSP
+    peers:
+      - peer0.yolean.se
+
+    certificateAuthorities:
+      - hlf-ca--yolean
+
+  Yolean2:
+    mspid: Yolean2MSP
+    peers:
+      - peer0.yolean2.se
+
+    certificateAuthorities:
+      - hlf-ca--yolean2
+
+peers:
+  peer0.yolean.se:
+    url: grpc://hlf-peer--yolean--peer0:7051
+    grpcOptions:
+      ssl-target-name-override: peer0.yolean.se
+
+  # peer0.yolean2.se:
+  #   url: grpc://hlf-peer--yolean2--peer0:7051
+  #   grpcOptions:
+  #     ssl-target-name-override: peer0.yolean2.se
+
+orderers:
+  1000.yoleanfront.se:
+    url: grpc://hlf-orderer--frontends--1000:7050
+    grpcOptions:
+      ssl-target-name-override: 1000.yoleanfront.se
+
+certificateAuthorities:
+  hlf-ca--yolean:
+    url: http://hlf-ca--yolean:7054
+    httpOptions:
+      verify: false
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    caName: hlf-ca--yolean
+
+  hlf-ca--yolean2:
+    url: http://hlf-ca--yolean2:7054
+    httpOptions:
+      verify: false
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    caName: hlf-ca--yolean2

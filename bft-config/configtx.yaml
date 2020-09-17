@@ -34,18 +34,18 @@ Organizations:
     #             Rule: "OR('YoleanOrdMSP.admin')"
     - &OrderingNodes
         Name: OrderingNodes
-        ID: NodesMSP
+        ID: OrderingNodesMSP
         MSPDir: crypto-config/ordererOrganizations/yoleanord.se/msp
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('NodesMSP.member')"
+                Rule: "OR('OrderingNodesMSP.member')"
             Writers:
                 Type: Signature
-                Rule: "AND('NodesMSP.member','NodesMSP.member')"
+                Rule: "AND('OrderingNodesMSP.member','OrderingNodesMSP.member')"
             Admins:
                 Type: Signature
-                Rule: "OR('NodesMSP.admin')"
+                Rule: "OR('OrderingNodesMSP.admin')"
 
     - &Frontends
         Name: Frontends

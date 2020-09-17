@@ -4,7 +4,7 @@
   "description": "the backend component for the distributed decision log",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "GRPC_WAIT_FOR_READT_TIMEOUT=1000 nodemon src/index.js",
     "lint": "eslint ."
   },
   "author": "NiklasJonsson6",
@@ -13,6 +13,7 @@
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "fabric-ca-client": "^2.1.0",
+    "fabric-client": "^1.4.10",
     "fabric-network": "^2.1.0",
     "log4js": "^2.5.3",
     "node-fetch": "^2.6.0",

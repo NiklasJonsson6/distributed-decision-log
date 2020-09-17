@@ -27,6 +27,4 @@ network:
         # chaincode will be instantiated/upgraded using the first peer in the first organization
         # chaincode will be invoked on all peers in these organizations
         orgs: [Yolean, Yolean2]
-        policy: AND('YoleanMSP.member','Yolean2MSP.member')
-
-
+        policy: OR('YoleanMSP.member','Yolean2MSP.member')
