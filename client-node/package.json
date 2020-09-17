@@ -14,7 +14,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "log4js": "^2.5.3",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "eslint": "^7.7.0",
