@@ -17,9 +17,6 @@ spec:
         image: backend-node
         ports:
         - containerPort: 8080
-        env: 
-        - name: GRPC_WAIT_FOR_READY_TIMEOUT
-          value: "1000"
       hostAliases:
         - ip: 10.102.29.80
           hostnames: [1000.yoleanfront.se]

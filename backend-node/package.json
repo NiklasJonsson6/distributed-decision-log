@@ -4,7 +4,7 @@
   "description": "the backend component for the distributed decision log",
   "main": "src/index.js",
   "scripts": {
-    "dev": "GRPC_WAIT_FOR_READT_TIMEOUT=1000 nodemon src/index.js",
+    "dev": "nodemon src/index.js",
     "lint": "eslint ."
   },
   "author": "NiklasJonsson6",
