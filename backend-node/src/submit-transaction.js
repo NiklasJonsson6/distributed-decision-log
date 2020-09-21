@@ -20,7 +20,7 @@ const submitTransaction = async (walletPath, name, ...args) => {
     'grpc.keepalive_timeout_ms': 20000,
     'grpc.http2.max_pings_without_data': 0,
     'grpc.keepalive_permit_without_calls': 1,
-    'grpc-wait-for-ready-timeout': 10000,
+    'grpc-wait-for-ready-timeout': 100000,
     'request-timeout' : 45000
   };
   Client.setConfigSetting('connection-options', opt);
