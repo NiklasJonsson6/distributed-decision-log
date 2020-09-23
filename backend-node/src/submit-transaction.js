@@ -44,7 +44,8 @@ const submitTransaction = async (walletPath, name, ...args) => {
     return response.toString('utf-8');
   } catch (error) {
     console.log(`Error on transaction: ${error}`);
-    console.log(error.stack);
+    //console.log(error.stack);
+    throw error;
   } finally {
     gateway.disconnect();
   }

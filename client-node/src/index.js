@@ -7,8 +7,8 @@ const log4js = require('log4js');
 const logger = log4js.getLogger();
 logger.level = 'debug';
 const scaleTo = 100;
-const scaleFrom = 9;
-const stepSize = 10;
+const scaleFrom = 19;
+const stepSize = 20;
 const iterations = 3;
 const backendAddr = 'backend';
 
@@ -18,7 +18,6 @@ for (let i = 0; i < scaleTo; i++) {
   const port = 8080+i;
   // Assert attendance
   app.get('/', (req, res) => {
-    // logger.debug('Asserting attendance');
     res.sendStatus(200);
   });
   // Start a decision and measure overhead (currently no time to act)
@@ -52,18 +51,26 @@ apps[0].app.get('/measure', async (req, res) => {
       let app = apps[c];
       await fetch(`http://${backendAddr}/here`, { method: 'POST', body: app.port.toString() });
     }
+    let r = [];
+    let responseTime = '';
     for (let i = 0; i < iterations; i++) {
       const startTime = process.hrtime();
       let endTime = process.hrtime();
-      //let responseTime = '';
       await fetch(`http://${backendAddr}/startDecision`)
         .then(async (res) => {
           endTime = process.hrtime(startTime);
-          //responseTime = await res.text();
-          results.push({Scale: upscale, Ovh: `${endTime[0]}.${Math.round(endTime[1] / 1000000)}s`});
-          logger.debug(`Scale ${upscale}, iteration ${i}`);
+          responseTime = await res.text();
+          if (res.ok) {
+            r.push((endTime[0] * 1000000000 + endTime[1]) / 1000000);
+            logger.debug(`Scale ${upscale}, iteration ${i}`);
+          } else {
+            i--;
+            logger.error(`Error on scale ${upscale}, iteration ${i}`);
+          }
         });
     }
+    let average = Math.round(r.reduce((a, b) => a + b) / r.length);
+    results.push({Scale: upscale, Ovhms: average, resp: responseTime});
   }
   // Clear backend's client list
   await fetch(`http://${backendAddr}/`);

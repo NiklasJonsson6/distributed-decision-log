@@ -1,0 +1,4 @@
+wtf.yaml
+tmp/*
+**/hostAliases.yaml
+**/externalHostAliases.yaml

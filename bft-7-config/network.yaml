@@ -1,0 +1,30 @@
+tlsEnabled: false
+useActualDomains: true
+
+network:
+  # used by init script to create genesis block and by peer-org-flow to parse consortiums
+  genesisProfile: OrdererGenesis
+  # used by init script to create genesis block 
+  systemChannelID: testchainid
+
+  # defines which organizations will join to which channels
+  channels:
+    - name: meeting1
+      # all peers in these organizations will join the channel
+      orgs: [Yolean, Yolean2]
+
+  # defines which chaincodes will be installed to which organizations
+  chaincodes:
+    - name: decision-log-shim
+      # if defined, this will override the global chaincode.version value
+      #version: # "2.0" 
+      # language: ...
+      # chaincode will be installed to all peers in these organizations
+      orgs: [Yolean, Yolean2]
+      # at which channels are we instantiating/upgrading chaincode?
+      channels:
+      - name: meeting1
+        # chaincode will be instantiated/upgraded using the first peer in the first organization
+        # chaincode will be invoked on all peers in these organizations
+        orgs: [Yolean, Yolean2]
+        policy: OR('YoleanMSP.member','Yolean2MSP.member')

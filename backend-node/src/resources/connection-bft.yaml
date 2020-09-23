@@ -35,7 +35,7 @@ peers:
     url: grpc://hlf-peer--yolean--peer0:7051
     grpcOptions:
       ssl-target-name-override: peer0.yolean.se
-      request-timeout: 120001
+      request-timeout: 220001
 
   # peer0.yolean2.se:
   #   url: grpc://hlf-peer--yolean2--peer0:7051

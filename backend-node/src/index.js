@@ -107,9 +107,12 @@ app.get('/startDecision', async (req, res) => {
   console.log(`Decision started with id: ${app.locals.decisionId}`);
 
   // Overhead
-  await decisionProcess(await enrollAdmin.enroll());
-
-  res.send(`: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
+  try {
+    await decisionProcess(await enrollAdmin.enroll());
+    res.send(`: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
+  } catch (error) {
+    res.status(400).send(`Error: ${error.stack}`);
+  }
 });
 
 app.post('/here', async (req, res) => {
