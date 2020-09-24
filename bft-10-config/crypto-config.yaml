@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------------------
+# "OrdererOrgs" - Definition of organizations managing orderer nodes
+# ---------------------------------------------------------------------------
+OrdererOrgs:
+  # ---------------------------------------------------------------------------
+  # Orderer
+  # ---------------------------------------------------------------------------
+  # - Name: YoleanOrd
+  #   Domain: yoleanord.se
+  #   EnableNodeOUs: true
+  #   Specs:
+  #     - Hostname: orderer0
+
+# ---------------------------------------------------------------------------
+# Frontends
+# ---------------------------------------------------------------------------
+  - Name: Frontends
+    Domain: yoleanfront.se
+    Specs:
+      - Hostname: 1000
+      
+# ---------------------------------------------------------------------------
+# Ordering nodes
+# ---------------------------------------------------------------------------
+  - Name: OrderingNodes
+    Domain: yoleanord.se
+    Template:
+      Count: 10
+      Hostname: "{{.Index}}"
+
+# ---------------------------------------------------------------------------
+# "PeerOrgs" - Definition of organizations managing peer nodes
+# ---------------------------------------------------------------------------
+PeerOrgs:
+  - Name: Yolean
+    Domain: yolean.se
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+  
+  - Name: Yolean2
+    Domain: yolean2.se
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

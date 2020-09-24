@@ -51,7 +51,7 @@ const decisionProcess = async (walletPath) => {
         }));
     });
     // Wait for timer
-    // ...
+    // ....
     // Wait for responses
     await Promise.allSettled(promises);
     console.log('All promises from ongoing phase settled, start of ended phase');

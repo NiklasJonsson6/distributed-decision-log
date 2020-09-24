@@ -41,42 +41,45 @@ for (let i = 0; i < scaleTo; i++) {
 }
 
 apps[0].app.get('/measure', async (req, res) => {
-  logger.debug('Starting tests');
   res.sendStatus(200);
-  let results = [];
-  // Run at each scale ten times
-  for (let upscale = scaleFrom; upscale < scaleTo; upscale += stepSize) {
-    // Join clients
-    for (let c = 0; c < upscale; c++) {
-      let app = apps[c];
-      await fetch(`http://${backendAddr}/here`, { method: 'POST', body: app.port.toString() });
+  // Run the measurements twice, cpu temp might affect the results
+  for (let i = 0; i < 2; i++) {
+    logger.debug('Starting tests');
+    let results = [];
+    // Run at each scale ten times
+    for (let upscale = scaleFrom; upscale < scaleTo; upscale += stepSize) {
+      // Join clients
+      for (let c = 0; c < upscale; c++) {
+        let app = apps[c];
+        await fetch(`http://${backendAddr}/here`, { method: 'POST', body: app.port.toString() });
+      }
+      let r = [];
+      let responseTime = '';
+      for (let i = 0; i < iterations; i++) {
+        const startTime = process.hrtime();
+        let endTime = process.hrtime();
+        await fetch(`http://${backendAddr}/startDecision`)
+          .then(async (res) => {
+            endTime = process.hrtime(startTime);
+            responseTime = await res.text();
+            if (res.ok) {
+              r.push((endTime[0] * 1000000000 + endTime[1]) / 1000000);
+              logger.debug(`Scale ${upscale}, iteration ${i}`);
+            } else {
+              i--;
+              logger.error(`Error on scale ${upscale}, iteration ${i}`);
+            }
+          });
+      }
+      let average = Math.round(r.reduce((a, b) => a + b) / r.length);
+      results.push({Scale: upscale, Ovhms: average, resp: responseTime});
     }
-    let r = [];
-    let responseTime = '';
-    for (let i = 0; i < iterations; i++) {
-      const startTime = process.hrtime();
-      let endTime = process.hrtime();
-      await fetch(`http://${backendAddr}/startDecision`)
-        .then(async (res) => {
-          endTime = process.hrtime(startTime);
-          responseTime = await res.text();
-          if (res.ok) {
-            r.push((endTime[0] * 1000000000 + endTime[1]) / 1000000);
-            logger.debug(`Scale ${upscale}, iteration ${i}`);
-          } else {
-            i--;
-            logger.error(`Error on scale ${upscale}, iteration ${i}`);
-          }
-        });
-    }
-    let average = Math.round(r.reduce((a, b) => a + b) / r.length);
-    results.push({Scale: upscale, Ovhms: average, resp: responseTime});
+    // Clear backend's client list
+    await fetch(`http://${backendAddr}/`);
+    results.forEach(res => {
+      logger.info(JSON.stringify(res));
+    });
   }
-  // Clear backend's client list
-  await fetch(`http://${backendAddr}/`);
-  results.forEach(res => {
-    logger.info(JSON.stringify(res));
-  });
 });
 // const app = express();
 // const port = 8080;

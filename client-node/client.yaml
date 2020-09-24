@@ -20,3 +20,16 @@ spec:
       hostAliases:
         - ip: 10.103.75.172
           hostnames: [backend]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-service
+spec:
+  selector:
+    app: client-node
+  ports:
+    - port: 80
+      targetPort: 8080
+  clusterIP: 10.103.75.173
