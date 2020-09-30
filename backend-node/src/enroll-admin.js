@@ -9,7 +9,8 @@ const path = require('path');
 
 const enroll = async () => {
   try {
-    const connectionProfile = yaml.safeLoad(fs.readFileSync('src/resources/connection-bft.yaml', 'utf8'));
+    //const connectionProfile = yaml.safeLoad(fs.readFileSync('src/resources/connection-bft.yaml', 'utf8'));
+    const connectionProfile = yaml.safeLoad(fs.readFileSync('src/resources/connection-yolean.yaml', 'utf8'));
 
     // CA
     const caInfo = connectionProfile.certificateAuthorities['hlf-ca--yolean'];

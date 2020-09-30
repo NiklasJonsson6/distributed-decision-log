@@ -34,7 +34,8 @@ const submitTransaction = async (walletPath, name, ...args) => {
     };
 
     //console.log('connecting to gateway');
-    await gateway.connect(yaml.safeLoad(fs.readFileSync('src/resources/connection-bft.yaml', 'utf8')), connectionOptions);
+    //await gateway.connect(yaml.safeLoad(fs.readFileSync('src/resources/connection-bft.yaml', 'utf8')), connectionOptions);
+    await gateway.connect(yaml.safeLoad(fs.readFileSync('src/resources/connection-yolean.yaml', 'utf8')), connectionOptions);
     const network = await gateway.getNetwork('meeting1');
     const contract = network.getContract('decision-log-shim');
 

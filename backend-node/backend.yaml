@@ -18,11 +18,11 @@ spec:
         ports:
         - containerPort: 8080
       hostAliases:
-        - ip: 10.98.37.156
-          hostnames: [1000.yoleanfront.se]
-        - ip: 10.97.143.208
+        - ip: 10.107.56.7
+          hostnames: [orderer0.yoleanord.se]
+        - ip: 10.104.253.71
           hostnames: [peer0.yolean.se]
-        - ip: 10.99.193.128
+        - ip: 10.99.42.119
           hostnames: [peer0.yolean2.se]
 ---
 apiVersion: v1

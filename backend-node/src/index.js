@@ -14,7 +14,7 @@ const submitTransaction = require('./submit-transaction');
 const decisionProcess = async (walletPath) => {
   let promises = [];
   // Pending phase
-  console.log('Start of pending phase, joining all clients to the decision: ' + JSON.stringify(app.locals.clients.map(c => c.ip)));
+  console.log(`Start of pending phase, joining all clients to the decision: ${app.locals.clients.length}`);
   app.locals.clients.forEach((c) => {
     promises.push(fetch(`http://${c.ip}`)
       .then((res) => {
@@ -111,7 +111,7 @@ app.get('/startDecision', async (req, res) => {
     await decisionProcess(await enrollAdmin.enroll());
     res.send(`: ${endTime[0]}s ${endTime[1] / 1000000}ms`);
   } catch (error) {
-    res.status(400).send(`Error: ${error.stack}`);
+    res.status(400).send(`${error.stack}`);
   }
 });
 
@@ -169,6 +169,13 @@ app.get('/test', async (req, res) => {
   console.log(`${req.socket.remoteAddress}:${req.socket.remotePort}/, ${req.ip}`);
   await submitTransaction(await enrollAdmin.enroll(), 'ping');
   res.sendStatus(200);
+});
+
+app.get('/resp', async (req, res) => {
+  const startTime = process.hrtime();
+  await submitTransaction(await enrollAdmin.enroll(), 'startDecision', uuidv4());
+  const endTime = process.hrtime(startTime);
+  res.send(`: ${endTime[0]}s ${endTime[1] / 1000000}ms \n`);
 });
 
 app.listen(port, () => console.log(`App listening on port ${port}`));
