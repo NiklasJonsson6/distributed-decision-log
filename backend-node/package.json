@@ -15,7 +15,7 @@
     "fabric-ca-client": "^2.1.0",
     "fabric-client": "^1.4.10",
     "fabric-network": "^2.1.0",
-    "log4js": "^2.5.3",
+    "log4js": "^6.4.0",
     "node-fetch": "^2.6.0",
     "uuid": "^8.3.0"
   },
